@@ -10,12 +10,10 @@ from src.schmengies.DesImage import DesImage
 def main():
     filename = sys.argv[1]
     if os.path.isfile(filename):
-        img = DesImage(filename)
-        img.DesTheImage(5)
-        cv.imshow("image", img.ReturnImage())
+        img = DesImage(filename, 25, 25)
+        cv.imshow("SNAP", img.DesTheImage(14))
         cv.waitKey(0)
         cv.destroyAllWindows()
-
     else:
         print("FILE ", filename, " DOESNT EXIST")
 

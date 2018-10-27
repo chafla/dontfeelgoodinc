@@ -17,11 +17,11 @@ class DesImage(object):
 
 
     def PrintImage(self):
-        cv.imshow("image", self.img)
+        cv.imshow("*S N A P*", self.img)
         cv.waitKey(0)
         cv.destroyAllWindows()
 
-    def DesTheImage(self, level):
+    def DesTheImage(self, level, override=False):
         height, width, _ = self.img.shape
 
         numOfSquaresWidth = self.numOfSquareWidth
@@ -189,7 +189,9 @@ class DesImage(object):
         #cv.imshow('new img', newImg)
         #cv.waitKey(0)
         #cv.destroyAllWindows()
-        self.img = newImg
+        if override:
+            self.img = newImg
+        return newImg
 
 
 
