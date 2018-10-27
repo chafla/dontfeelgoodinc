@@ -1,4 +1,6 @@
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QHBoxLayout
+from src.gui.image_manager import ImageManger
+
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QHBoxLayout, QMainWindow, QFrame
 
 from PyQt5.QtCore import Qt
 import PyQt5.QtMultimedia
@@ -7,119 +9,99 @@ import PyQt5.QtGui
 import PyQt5
 
 
-# app = QApplication([])
-#
-# # window = Q
-#
-# app.setStyleSheet("QPushButton { margin: 10ex; }")
-#
-# label = QLabel("ur mom gay")
-#
-# window = QWidget()
-#
-# layout = QVBoxLayout(window)
-#
-# button = QPushButton("click")
-#
-# def on_button_clicked():
-#     alert = PyQt5.QtWidgets.QMessageBox()
-#     alert.setText("Oof")
-#     alert.exec_()
-#
-# button.clicked.connect(on_button_clicked)
+class ImageWidget(QLabel):
+    def __init__(self, img, parent=None):
+        super(ImageWidget, self).__init__(parent)
+        pixmap = PyQt5.QtGui.QPixmap(img)
+        self.setPixmap(pixmap)
+        self.resize(pixmap.width(), pixmap.height())
 
-# layout.addWidget(QPushButton("Top"))
-# layout.addWidget(QPushButton("Me irl"))
 
-# window.setLayout(layout)
+class GuiWindow(QMainWindow):
 
-# button.show()
-#
-# label.show()
-# app.exec_()
+    def __init__(self, controller, base_img_fp: str):
+        super(GuiWindow, self).__init__()
+        # self.app = QApplication([])
 
-class Gui:
+        self.img_manager = ImageManger(base_img_fp)
 
-    def __init__(self):
+        self.controller = controller
+        self.create_content()
+        self.show()
+
+    def create_content(self):
         self.snap_sound = PyQt5.QtMultimedia.QSound("snap_ex.wav")
 
-        self.img = None
+        # Build the components first
 
-        # Boilerplate defs
-        # Define the app
-        self.app = QApplication([])
+        self.outer_widget = PyQt5.QtWidgets.QWidget(self)  # Dummy outer widget needed so that we can add others to it
 
-        self.window = PyQt5.QtWidgets.QMainWindow()
-        self.window.show()
+        # This is the frame to hold the options.
+        self.main_frame = PyQt5.QtWidgets.QGroupBox(self.outer_widget)  # Specifying parent=self locks it within the current window
+        # self.main_frame.setTitle("Parameters")
 
-        self.true_central_widget = QHBoxLayout()
+        # The main layout for the param box and the image
+        self.main_layout_wide = QHBoxLayout(self.main_frame)
 
-        self.central_widget = QWidget()
+        self.input_frame = QWidget(self.outer_widget)
 
-        # Image definition
-        self.image_widget = QWidget()
-        self.img = PyQt5.QtWidgets.QLabel(self.image_widget)
-        pixmap = PyQt5.QtGui.QPixmap("kju.jpg")
-        self.img.setPixmap(pixmap)
-        self.img.resize(pixmap.width(), pixmap.height())
-        self.image_widget.show()
+        self.main_layout_wide.addWidget(self.input_frame)
 
-        # self.add_image()
+        self.input_frame_layout = QVBoxLayout(self.input_frame)
 
-        self.left_col_layout = QVBoxLayout(self.central_widget)
+        # Now, adding the parts back in...
 
-        self.gain_slider = PyQt5.QtWidgets.QSlider(Qt.Horizontal, self.central_widget)
+        self.gain_slider = PyQt5.QtWidgets.QSlider(Qt.Horizontal, self.input_frame)
 
-        self.go_button = PyQt5.QtWidgets.QPushButton("*snap*", self.central_widget)
-
-        self.left_col_layout.addWidget(self.gain_slider)
-        self.left_col_layout.addWidget(self.go_button)
-
-        self.true_central_widget.addWidget(self.central_widget)
-        self.true_central_widget.addWidget(self.image_widget)
-
-        self.central_widget.setLayout(self.true_central_widget)
-
-        self.window.setCentralWidget(self.central_widget)
-
-        self.img.show()
-
-        self.window.show()
-
-        # Register button to snap
+        self.go_button = PyQt5.QtWidgets.QPushButton("*snap*", self.input_frame)
 
         self.go_button.clicked.connect(self.on_click)
 
+        self.input_frame_layout.addWidget(self.gain_slider)
+        self.input_frame_layout.addWidget(self.go_button)
 
+        # Trying something else out
 
-    def run(self):
-        self.app.exit(self.app.exec_())
+        self.image_frame = QFrame(self)
+
+        # Creating the second container
+
+        self.image_widget = ImageWidget("kju.jpg", self.outer_widget)
+
+        self.main_layout_wide.addWidget(self.image_widget)
+
+        # self.main_layout.addLayout(self.main_frame)
+
+        self.setCentralWidget(self.outer_widget)
+
+        self.setFixedSize(self.main_layout_wide.sizeHint())
+
+        # self.main_frame.show()
 
     def on_click(self):
         self.snap_sound.play()
 
-    def add_image(self):
-        pass
+    def reload_image(self):
+        """
+        Reload the image within the current frame, asking the underlying functions to recalculate
+        based on its current values.
+        """
+        img = self.img_manager.update_image()
+
+        q_image = PyQt5.QtGui.QImage.fromData(img)
+        q_pixmap = PyQt5.QtGui.QPixmap.fromImage(q_image)
+
+        self.image_widget.setPixmap(q_pixmap)
+
+    def on_slider_adjust(self):
+        new_value = self.gain_slider.value()
+        # TODO Scale this
+        self.img_manager.gain = new_value
 
 
-class ImageWidget(QWidget):
-    def __init__(self, img, parent=None):
-        super(ImageWidget, self).__init__(parent)
+if __name__ == '__main__':
+    app = QApplication([])
 
-        self._img = img
+    g = GuiWindow(app, "kju.jpg")
 
-        self.pixmap = QLabel(self)
-
-
-
-
-
-
-
-g = Gui()
-g.run()
-
-
-
-
-
+    app.exit(app.exec_())
