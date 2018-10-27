@@ -11,9 +11,11 @@ def main():
     filename = sys.argv[1]
     if os.path.isfile(filename):
         img = DesImage(filename)
-        #img.PrintImage()
-        img.DesTheImage(5, 10)
-        img.PrintImage()
+        img.DesTheImage(10)
+        cv.imshow("image", img.ReturnImage())
+        cv.waitKey(0)
+        cv.destroyAllWindows()
+
     else:
         print("FILE ", filename, " DOESNT EXIST")
 

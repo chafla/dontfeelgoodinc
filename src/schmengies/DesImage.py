@@ -7,48 +7,30 @@ class DesImage(object):
     def __init__(self, arg1):
         self.img = cv.imread(arg1)
 
+    def ReturnImage(self):
+        return self.img
+
     def PrintImage(self):
         cv.imshow("image", self.img)
         cv.waitKey(0)
         cv.destroyAllWindows()
 
-    def DesTheImage(self, level, _):
+    def DesTheImage(self, level):
         height, width, _ = self.img.shape
 
-        numOfSquaresWidth = 25
-        numOfSquaresHeight = 25
+        numOfSquaresWidth = width
+        numOfSquaresHeight = height
 
-        widthSize = int(width / numOfSquaresWidth)
-        heightSize = int(height / numOfSquaresHeight)
+        widthSize = 1#int(width / numOfSquaresWidth)
+        heightSize = 1#int(height / numOfSquaresHeight)
 
-        newImg = np.zeros((height, width, 3))
+        newImg = np.zeros((height, width, 3), dtype=np.uint8)
+
+        down = True
 
         for i in reversed(range(0, numOfSquaresWidth)):
             for j in reversed(range(0, numOfSquaresHeight)):
 
-                if j == numOfSquaresHeight - 1 and i == numOfSquaresWidth - 1:
-                    newImg[heightSize * j: (heightSize * j) + 2 * heightSize, widthSize * i: (widthSize * i) + 2 * widthSize + self.Algorithmic(level, i, numOfSquaresWidth), :] \
-                        = self.img[heightSize * j: (heightSize * j) + 2 * heightSize,  widthSize * i: (widthSize * i) + 2 * widthSize].copy()
-
-                elif j == numOfSquaresHeight - 1:
-                    newImg[heightSize * j: (heightSize * j) + 2 * heightSize, widthSize * i: (widthSize * i) + widthSize + self.Algorithmic(level, i, numOfSquaresWidth), :] \
-                        = self.img[heightSize * j: (heightSize * j) + 2 * heightSize,  widthSize * i: (widthSize * i) + widthSize].copy()
-
-                elif i == numOfSquaresWidth - 1:
-                    newImg[heightSize * j: (heightSize * j) + heightSize, widthSize * i: (widthSize * i) + 2 * widthSize + self.Algorithmic(level, i, numOfSquaresWidth), :] \
-                        = self.img[heightSize * j: (heightSize * j) + heightSize, widthSize * i: (widthSize * i) + 2 * widthSize].copy()
-
-                else:
-                    newImg[heightSize * j: (heightSize * j) + heightSize, widthSize * i + self.Algorithmic(level, i, numOfSquaresWidth): (widthSize * i) + widthSize + self.Algorithmic(level, i, numOfSquaresWidth), :] \
-                        = self.img[heightSize * j: (heightSize * j) + heightSize, widthSize * i: (widthSize * i) + widthSize].copy()
-
-
-                """
-                cv.imshow("image", newImg)
-
-                cv.waitKey(0)
-                cv.destroyAllWindows()
-                """
 
                 """
                 if j == numOfSquaresHeight - 1 and i == numOfSquaresWidth - 1:
@@ -61,6 +43,89 @@ class DesImage(object):
                     self.img[heightSize*j : (heightSize * j)+heightSize, widthSize*i : (widthSize*i)+widthSize] = [69, 69, 69]
                 self.PrintImage()
                 """
+
+
+                if down:
+                    try:
+                        if j == numOfSquaresHeight - 1 and i == numOfSquaresWidth - 1:
+                            newImg[heightSize * j + level*self.Algorithmic(level, i, numOfSquaresWidth): (heightSize * j) + 2 * heightSize + level*self.Algorithmic(level, i, numOfSquaresWidth),
+                            widthSize * i: (widthSize * i) + 2 * widthSize + self.Algorithmic(level, i, numOfSquaresWidth), :] \
+                                = self.img[heightSize * j: (heightSize * j) + 2 * heightSize,
+                                  widthSize * i: (widthSize * i) + 2 * widthSize].copy()
+
+                        elif j == numOfSquaresHeight - 1:
+                            newImg[heightSize * j + level*self.Algorithmic(level, i, numOfSquaresWidth): (heightSize * j) + 2 * heightSize + level*self.Algorithmic(level, i, numOfSquaresWidth),
+                            widthSize * i + self.Algorithmic(level, i, numOfSquaresWidth): (widthSize * i) + widthSize + self.Algorithmic(level, i, numOfSquaresWidth), :] \
+                                = self.img[heightSize * j: (heightSize * j) + 2 * heightSize,
+                                  widthSize * i: (widthSize * i) + widthSize].copy()
+
+                        elif i == numOfSquaresWidth - 1:
+                            newImg[heightSize * j + level*self.Algorithmic(level, i, numOfSquaresWidth): (heightSize * j) + heightSize + level*self.Algorithmic(level, i, numOfSquaresWidth),
+                            widthSize * i: (widthSize * i) + 2 * widthSize + self.Algorithmic(level, i, numOfSquaresWidth), :] \
+                                = self.img[heightSize * j: (heightSize * j) + heightSize,
+                                  widthSize * i: (widthSize * i) + 2 * widthSize].copy()
+
+                        else:
+                            newImg[heightSize * j + level*self.Algorithmic(level, i, numOfSquaresWidth): (heightSize * j) + heightSize + level*self.Algorithmic(level, i, numOfSquaresWidth),
+                            widthSize * i + self.Algorithmic(level, i, numOfSquaresWidth): (widthSize * i) + widthSize + self.Algorithmic(level, i, numOfSquaresWidth), :] \
+                                = self.img[heightSize * j: (heightSize * j) + heightSize,
+                                  widthSize * i: (widthSize * i) + widthSize].copy()
+                    except ValueError as e:
+                        print(":ok_hand: ", e)
+                        newImg[heightSize * j: (heightSize * j) + heightSize,
+                        widthSize * i: ( widthSize * i) + widthSize] = self.img[heightSize * j: (heightSize * j) + heightSize,
+                            widthSize * i: (widthSize * i) + widthSize].copy()
+                    down = False
+
+                else:
+                    try:
+                        if j == numOfSquaresHeight - 1 and i == numOfSquaresWidth - 1:
+                            newImg[heightSize * j - level*self.Algorithmic(level, i, numOfSquaresWidth): (heightSize * j) + 2 * heightSize - level*self.Algorithmic(
+                                level, i, numOfSquaresWidth),
+                            widthSize * i: (widthSize * i) + 2 * widthSize + self.Algorithmic(level, i,
+                                                                                              numOfSquaresWidth), :] \
+                                = self.img[heightSize * j: (heightSize * j) + 2 * heightSize,
+                                  widthSize * i: (widthSize * i) + 2 * widthSize].copy()
+
+                        elif j == numOfSquaresHeight - 1:
+                            newImg[heightSize * j - level*self.Algorithmic(level, i, numOfSquaresWidth): (heightSize * j) + 2 * heightSize - level*self.Algorithmic(
+                                level, i, numOfSquaresWidth),
+                            widthSize * i + self.Algorithmic(level, i, numOfSquaresWidth): (widthSize * i) + widthSize + self.Algorithmic(
+                                level, i, numOfSquaresWidth), :] \
+                                = self.img[heightSize * j: (heightSize * j) + 2 * heightSize,
+                                  widthSize * i: (widthSize * i) + widthSize].copy()
+
+                        elif i == numOfSquaresWidth - 1:
+                            newImg[heightSize * j - level*self.Algorithmic(level, i, numOfSquaresWidth): (heightSize * j) + heightSize - level*self.Algorithmic(
+                                level, i, numOfSquaresWidth),
+                            widthSize * i: (widthSize * i) + 2 * widthSize + self.Algorithmic(level, i,
+                                                                                              numOfSquaresWidth), :] \
+                                = self.img[heightSize * j: (heightSize * j) + heightSize,
+                                  widthSize * i: (widthSize * i) + 2 * widthSize].copy()
+
+                        else:
+                            newImg[heightSize * j - level*self.Algorithmic(level, i, numOfSquaresWidth): (heightSize * j) + heightSize - level*self.Algorithmic(
+                                level, i, numOfSquaresWidth),
+                            widthSize * i + self.Algorithmic(level, i, numOfSquaresWidth): (
+                                                                                                       widthSize * i) + widthSize + self.Algorithmic(
+                                level, i, numOfSquaresWidth), :] \
+                                = self.img[heightSize * j: (heightSize * j) + heightSize,
+                                  widthSize * i: (widthSize * i) + widthSize].copy()
+                    except ValueError as e:
+                        print(":ok_hand: ", e)
+                        newImg[heightSize * j: (heightSize * j) + heightSize,
+                        widthSize * i: (widthSize * i) + widthSize] = self.img[
+                                                                      heightSize * j: (heightSize * j) + heightSize,
+                                                                      widthSize * i: (widthSize * i) + widthSize].copy()
+                    down = True
+
+                """
+                cv.imshow("image", newImg)
+
+                cv.waitKey(0)
+                cv.destroyAllWindows()
+                """
+
 
                 """
                 if j == numOfSquaresHeight - 1 and i == numOfSquaresWidth - 1:
@@ -96,15 +161,36 @@ class DesImage(object):
                     temp = self.img[heightSize * j: (heightSize * j) + heightSize, widthSize * i: (widthSize * i) + widthSize]
                     self.img[heightSize * j: (heightSize * j) + heightSize, widthSize * i: (widthSize * i) + widthSize] = [0, 0, 0]
                     self.img[heightSize * j: (heightSize * j) + heightSize, widthSize * i + self.Algorithmic(level, i, numOfSquaresWidth): (widthSize * i) + widthSize
-                                                                                   + self.Algorithmic(level, i, numOfSquaresWidth)] = temp
                 """
-        cv.imshow("image", newImg)
 
-        cv.waitKey(0)
+
+
+                #roi = self.img[j * heightSize: j * heightSize + heightSize, i*widthSize:i*widthSize+widthSize]
+                #newImg[j * heightSize: j * heightSize + heightSize, i*widthSize:i*widthSize+widthSize] = roi
+               # roi0 = self.img[000:400,000:400,0]
+                #roi1 = self.img[000:400,000:400,1]
+                #roi2 = self.img[000:400,000:400,2]
+                #newImg[000:400, 000:400, 0] = self.img[000:400,000:400,0]
+                #newImg[000:400, 000:400, 1] = self.img[000:400,000:400,1]
+                #newImg[000:400, 000:400, 2] = self.img[000:400,000:400,2]
+
+
+                #cv.imshow('new img', newImg)
+                #cv.waitKey(0)
+                #cv.destroyAllWindows()
+
+
+        #cv.imshow('new img', newImg)
+        #cv.waitKey(0)
+        #cv.destroyAllWindows()
+        self.img = newImg
+
+
+
 
 
     def Algorithmic(self, level, depth, numOfSquaresWidth) -> int:
-        #return int(10 * pow(10, depth/numOfSquaresWidth - level))
-        return 100
+        answer = int(15*pow(10, depth/numOfSquaresWidth - level/10) - 1)
+        return answer
 
 
