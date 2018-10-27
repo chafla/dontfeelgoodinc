@@ -5,7 +5,7 @@ from src.gui.animation_ready_emitter import AnimationReadyEmitter
 
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QHBoxLayout, QMainWindow, QFrame
 
-from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QThread
+from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QThread, QSize
 import PyQt5.QtMultimedia
 import PyQt5.QtGui
 
@@ -16,10 +16,12 @@ import PyQt5
 
 class AnimationWidget(QWidget):
 
-    def __init__(self, file_path: str, parent=None):
+    def __init__(self, file_path: str, loop_count: int, parent=None):
         super().__init__(parent)
 
         self.movie = QMovie(file_path)
+        self.movie.setFormat(b"GIF")
+        self.movie.loopCount()
 
         self.label = QLabel(self)
         self.label.setMovie(self.movie)
@@ -61,9 +63,13 @@ class GuiWindow(QMainWindow):
 
         self.img_manager = ImageManager(base_img_fp)
 
+        self._file_path = base_img_fp
+
         self._anim_thread = None
         self._anim_worker = None
         self.animation_widget = None
+
+        self._current_chunk_size = 0
 
         self.controller = controller
         self.create_content()
@@ -104,6 +110,8 @@ class GuiWindow(QMainWindow):
 
         self.chunk_size_slider = PyQt5.QtWidgets.QSlider(Qt.Horizontal, self.input_frame)
 
+        self.chunk_size_slider.valueChanged.connect(self.on_chunk_slider_adjust)
+
         # This needs to be controlled with a single button press as it'll involve reloading the object
         self.chunk_size_button = PyQt5.QtWidgets.QPushButton("Apply chunk size", self.input_frame)
 
@@ -136,7 +144,7 @@ class GuiWindow(QMainWindow):
 
         # Creating the second container
 
-        self.image_widget = ImageWidget("kju.jpg", self.outer_widget)
+        self.image_widget = ImageWidget(self._file_path, self.outer_widget)
 
         self.main_layout_wide.addWidget(self.image_widget)
 
@@ -164,14 +172,24 @@ class GuiWindow(QMainWindow):
     @pyqtSlot(str)
     def on_animation_complete(self, file_path: str):
         """Replace the original image widget until the movie completes, and then change it back"""
-        self.animation_widget = AnimationWidget(file_path)
+        self.animation_widget = AnimationWidget(file_path, self.outer_widget)
 
-        self.main_layout_wide.replaceWidget(self.image_widget, self.animation_widget)
+        # self.main_layout_wide.replaceWidget(self.image_widget, self.animation_widget)
+        prev_image_ix = self.main_layout_wide.indexOf(self.image_widget)
+        # self.main_layout_wide.removeWidget(self.image_widget)
+        self.image_widget.hide()  # FIXME Yuck
+        self.main_layout_wide.addWidget(self.animation_widget, Qt.Horizontal)
         self.animation_widget.movie.finished.connect(self.replace_original_img_widget)
-        self.animation_widget.run()
+        # self.animation_widget.movie.setScaledSize(QSize(900, 900))
+        self.animation_widget.movie.start()
+        self.animation_widget.show()
 
     @pyqtSlot()
     def replace_original_img_widget(self):
+        self.animation_widget.hide()
+        self.image_widget.show()
+        self.main_layout_wide.removeWidget(self.animation_widget)
+        self.main_layout_wide.insertWidget(1, self.image_widget)
         self.main_layout_wide.replaceWidget(self.animation_widget, self.image_widget)
 
     def on_snap(self):
@@ -202,10 +220,17 @@ class GuiWindow(QMainWindow):
         # TODO Scale this
         print(new_value)
         self.img_manager.gain = new_value
+        if self.img_manager.chunk_size > 10:
+            self.reload_image()
+
+    def on_chunk_slider_adjust(self):
+        if self.chunk_size_slider.value() != self._current_chunk_size:
+            self.chunk_size_button.setDisabled(False)
 
     def on_chunk_click(self):
         new_value = self.chunk_size_slider.value()
         self.img_manager.chunk_size = new_value
+        self.chunk_size_button.setDisabled(True)
 
     def on_reset(self):
         self.img_manager.reset()
@@ -213,7 +238,6 @@ class GuiWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication([])
-
     g = GuiWindow(app, "kju.jpg")
 
     app.exit(app.exec_())

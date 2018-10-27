@@ -72,7 +72,7 @@ class ImageManager:
         images = []
         original_gain = self.gain
 
-        for i in range(1, 101, 5):
+        for i in reversed(range(1, 101, 5)):
 
             # TODO This is going to cause many issues down the line
             self.gain = i
@@ -80,7 +80,7 @@ class ImageManager:
             img = imageio.imread(new_img_fd)
             images.append(img)
 
-        imageio.mimsave(file_path, images, duration=0.1)
+        imageio.mimsave(file_path, images, duration=0.1, loop=1)
         self.gain = original_gain
         return file_path
         # Hacky
