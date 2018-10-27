@@ -4,8 +4,8 @@ import math
 
 class DesImage(object):
 
-    def __init__(self, arg1):
-        self.img = cv.imread(arg1)
+    def __init__(self, filename):
+        self.img = cv.imread(filename)
 
     def ReturnImage(self):
         return self.img
