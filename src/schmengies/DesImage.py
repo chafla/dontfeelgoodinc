@@ -4,11 +4,17 @@ import math
 
 class DesImage(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, widthSquares=None, heightSquares=None):
         self.img = cv.imread(filename)
+        self.numOfSquareHeight, self.numOfSquareWidth, _ = self.img.shape
+        if widthSquares is not None:
+            self.numOfSquareWidth = widthSquares
+        if heightSquares is not None:
+            self.numOfSquareHeight = heightSquares
 
     def ReturnImage(self):
         return self.img
+
 
     def PrintImage(self):
         cv.imshow("image", self.img)
@@ -18,11 +24,11 @@ class DesImage(object):
     def DesTheImage(self, level):
         height, width, _ = self.img.shape
 
-        numOfSquaresWidth = width
-        numOfSquaresHeight = height
+        numOfSquaresWidth = self.numOfSquareWidth
+        numOfSquaresHeight = self.numOfSquareHeight
 
-        widthSize = 1#int(width / numOfSquaresWidth)
-        heightSize = 1#int(height / numOfSquaresHeight)
+        widthSize = int(width / numOfSquaresWidth)
+        heightSize = int(height / numOfSquaresHeight)
 
         newImg = np.zeros((height, width, 3), dtype=np.uint8)
 
