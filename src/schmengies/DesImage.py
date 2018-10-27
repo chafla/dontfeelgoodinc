@@ -77,7 +77,7 @@ class DesImage(object):
                                 = self.img[heightSize * j: (heightSize * j) + heightSize,
                                   widthSize * i: (widthSize * i) + widthSize].copy()
                     except ValueError as e:
-                        print(":ok_hand: ", e)
+                        print("\N{OK HAND SIGN}", e)
                         newImg[heightSize * j: (heightSize * j) + heightSize,
                         widthSize * i: ( widthSize * i) + widthSize] = self.img[heightSize * j: (heightSize * j) + heightSize,
                             widthSize * i: (widthSize * i) + widthSize].copy()
@@ -118,7 +118,7 @@ class DesImage(object):
                                 = self.img[heightSize * j: (heightSize * j) + heightSize,
                                   widthSize * i: (widthSize * i) + widthSize].copy()
                     except ValueError as e:
-                        print(":ok_hand: ", e)
+                        print("\N{OK HAND SIGN} ", e)
                         newImg[heightSize * j: (heightSize * j) + heightSize,
                         widthSize * i: (widthSize * i) + widthSize] = self.img[
                                                                       heightSize * j: (heightSize * j) + heightSize,
