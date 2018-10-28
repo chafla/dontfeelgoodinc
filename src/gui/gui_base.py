@@ -1,7 +1,6 @@
 from PyQt5.QtGui import QMovie
 
 from src.gui.image_manager import ImageManager
-from src.gui.animation_ready_emitter import AnimationReadyEmitter
 
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QHBoxLayout, QMainWindow, QFrame
 
@@ -16,12 +15,11 @@ import PyQt5
 
 class AnimationWidget(QWidget):
 
-    def __init__(self, file_path: str, loop_count: int, parent=None):
+    def __init__(self, file_path: str, parent=None):
         super().__init__(parent)
 
         self.movie = QMovie(file_path)
         self.movie.setFormat(b"GIF")
-        self.movie.loopCount()
 
         self.label = QLabel(self)
         self.label.setMovie(self.movie)
@@ -71,6 +69,8 @@ class GuiWindow(QMainWindow):
 
         self._current_chunk_size = 0
 
+        self.setWindowTitle("Don't Feel Good Inc.")
+
         self.controller = controller
         self.create_content()
         self.show()
@@ -98,7 +98,7 @@ class GuiWindow(QMainWindow):
         # Now, adding the parts back in...
 
         self.gain_slider_label = PyQt5.QtWidgets.QLabel(self.input_frame)
-        self.gain_slider_label.setText("Gain")
+        self.gain_slider_label.setText("Custom adjustment")
 
         self.gain_slider = PyQt5.QtWidgets.QSlider(Qt.Horizontal, self.input_frame)
         self.gain_slider.valueChanged.connect(self.on_gain_slider_adjust)
@@ -110,6 +110,10 @@ class GuiWindow(QMainWindow):
 
         self.chunk_size_slider = PyQt5.QtWidgets.QSlider(Qt.Horizontal, self.input_frame)
 
+        # Start this in the middle so we don't get a div/0
+
+        self.chunk_size_slider.setSliderPosition(40)
+
         self.chunk_size_slider.valueChanged.connect(self.on_chunk_slider_adjust)
 
         # This needs to be controlled with a single button press as it'll involve reloading the object
@@ -117,11 +121,11 @@ class GuiWindow(QMainWindow):
 
         self.chunk_size_button.clicked.connect(self.on_chunk_click)
 
-        self.go_button = PyQt5.QtWidgets.QPushButton("*snap*", self.input_frame)
+        # self.go_button = PyQt5.QtWidgets.QPushButton("*snap*", self.input_frame)
+        #
+        # self.go_button.clicked.connect(self.on_snap)
 
-        self.go_button.clicked.connect(self.on_snap)
-
-        self.full_snap_button = PyQt5.QtWidgets.QPushButton("Full snap", self.input_frame)
+        self.full_snap_button = PyQt5.QtWidgets.QPushButton("*snap*", self.input_frame)
 
         self.full_snap_button.clicked.connect(self.display_animation)
 
@@ -134,7 +138,7 @@ class GuiWindow(QMainWindow):
         self.input_frame_layout.addWidget(self.chunk_size_button)
         self.input_frame_layout.addWidget(self.gain_slider_label)
         self.input_frame_layout.addWidget(self.gain_slider)
-        self.input_frame_layout.addWidget(self.go_button)
+        # self.input_frame_layout.addWidget(self.go_button)
         self.input_frame_layout.addWidget(self.full_snap_button)
         self.input_frame_layout.addWidget(self.reset_button)
 
@@ -154,12 +158,15 @@ class GuiWindow(QMainWindow):
 
         self.setFixedSize(self.main_layout_wide.sizeHint())
 
+        self.on_chunk_click()
+
         # Make sure we're ready to handle an animation if the need arises
         # AnimationReadyEmitter.trigger.connect(self.display_animation)
 
         # self.main_frame.show()
 
     def display_animation(self):
+        self.snap_sound.play()
         self._anim_worker = AnimWorker(self.img_manager, True)
         self._anim_thread = QThread()
         self._anim_worker.moveToThread(self._anim_thread)
@@ -167,12 +174,16 @@ class GuiWindow(QMainWindow):
         self._anim_worker.anim_done.connect(self.on_animation_complete)
 
         self._anim_thread.started.connect(self._anim_worker.work)
+
+        self.full_snap_button.setDisabled(True)
+
         self._anim_thread.start()
 
     @pyqtSlot(str)
     def on_animation_complete(self, file_path: str):
         """Replace the original image widget until the movie completes, and then change it back"""
         self.animation_widget = AnimationWidget(file_path, self.outer_widget)
+        self.full_snap_button.setDisabled(False)
 
         # self.main_layout_wide.replaceWidget(self.image_widget, self.animation_widget)
         prev_image_ix = self.main_layout_wide.indexOf(self.image_widget)
@@ -186,6 +197,7 @@ class GuiWindow(QMainWindow):
 
     @pyqtSlot()
     def replace_original_img_widget(self):
+        self.animation_widget.movie.stop()  # This is needed to
         self.animation_widget.hide()
         self.image_widget.show()
         self.main_layout_wide.removeWidget(self.animation_widget)
@@ -228,16 +240,19 @@ class GuiWindow(QMainWindow):
             self.chunk_size_button.setDisabled(False)
 
     def on_chunk_click(self):
-        new_value = self.chunk_size_slider.value()
+        new_value = self.chunk_size_slider.value() + 1  # Make sure it's never equal to 0
         self.img_manager.chunk_size = new_value
         self.chunk_size_button.setDisabled(True)
 
     def on_reset(self):
         self.img_manager.reset()
+        self.reload_image()
 
 
 if __name__ == '__main__':
     app = QApplication([])
     g = GuiWindow(app, "kju.jpg")
+
+    # TODO add file load/file save
 
     app.exit(app.exec_())
