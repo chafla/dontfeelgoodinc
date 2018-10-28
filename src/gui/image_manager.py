@@ -46,6 +46,7 @@ class ImageManager:
     def reset(self):
         """Reload, attempting to check the new chunk sizes"""
         self.image = DesImage(self._original_fp, self.chunk_size, self.chunk_size)
+        return self._original_fp
 
     @property
     def gain(self) -> int:

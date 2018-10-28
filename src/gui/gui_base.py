@@ -1,14 +1,16 @@
-from PyQt5.QtGui import QMovie
+from PyQt5.QtGui import QMovie, QIcon
 
 from src.gui.image_manager import ImageManager
 
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QHBoxLayout, QMainWindow, QFrame
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QHBoxLayout, QMainWindow, QFrame, QAction, \
+    QLineEdit, QFileDialog
 
 from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QThread, QSize
 import PyQt5.QtMultimedia
 import PyQt5.QtGui
 
 from time import sleep
+import os.path
 
 import PyQt5
 
@@ -80,6 +82,8 @@ class GuiWindow(QMainWindow):
 
         # Build the components first
 
+        # Build a textbox for the filepath.
+
         self.outer_widget = PyQt5.QtWidgets.QWidget(self)  # Dummy outer widget needed so that we can add others to it
 
         # This is the frame to hold the options.
@@ -96,6 +100,14 @@ class GuiWindow(QMainWindow):
         self.input_frame_layout = QVBoxLayout(self.input_frame)
 
         # Now, adding the parts back in...
+
+        self.textbox = QLabel(self.input_frame)
+        self.textbox.setText(self._file_path)
+
+        self.load_file_button = PyQt5.QtWidgets.QPushButton(self.input_frame)
+        self.load_file_button.setText("Browse for file")
+
+        self.load_file_button.clicked.connect(self.on_load)
 
         self.gain_slider_label = PyQt5.QtWidgets.QLabel(self.input_frame)
         self.gain_slider_label.setText("Custom adjustment")
@@ -133,6 +145,8 @@ class GuiWindow(QMainWindow):
 
         self.reset_button.clicked.connect(self.on_reset)
 
+        self.input_frame_layout.addWidget(self.textbox)
+        self.input_frame_layout.addWidget(self.load_file_button)
         self.input_frame_layout.addWidget(self.chunk_slider_label)
         self.input_frame_layout.addWidget(self.chunk_size_slider)
         self.input_frame_layout.addWidget(self.chunk_size_button)
@@ -164,6 +178,29 @@ class GuiWindow(QMainWindow):
         # AnimationReadyEmitter.trigger.connect(self.display_animation)
 
         # self.main_frame.show()
+
+    def on_load(self):
+        dlg = QFileDialog()
+        dlg.setFileMode(QFileDialog.ExistingFile)
+        new_path, _ = dlg.getOpenFileName(None, "Open file", "%userprofile%\\Pictures\\")
+        if new_path == ("", ""):
+            return
+        if not os.path.exists(new_path):
+            self.textbox.setStyleSheet("color: rgb(255, 0, 0);")
+        else:
+            self.textbox.setStyleSheet("color: rgb(0, 0, 0);")
+
+            self._file_path = new_path
+            self.textbox.setText(self._file_path)
+            self.img_manager = ImageManager(new_path)
+            q_pixmap = PyQt5.QtGui.QPixmap(self._file_path)
+
+
+
+            self.image_widget.setPixmap(q_pixmap)
+            self.image_widget.resize(q_pixmap.width(), q_pixmap.height())
+            self.main_frame.resize(self.main_layout_wide.sizeHint())
+            self.setFixedSize(self.main_layout_wide.sizeHint())
 
     def display_animation(self):
         self.snap_sound.play()
@@ -246,12 +283,15 @@ class GuiWindow(QMainWindow):
 
     def on_reset(self):
         self.img_manager.reset()
-        self.reload_image()
+        self.gain_slider.setValue(0)
+        q_pixmap = PyQt5.QtGui.QPixmap(self._file_path)
+
+        self.image_widget.setPixmap(q_pixmap)
 
 
 if __name__ == '__main__':
     app = QApplication([])
-    g = GuiWindow(app, "kju.jpg")
+    g = GuiWindow(app, "spoder.jpg")
 
     # TODO add file load/file save
 
